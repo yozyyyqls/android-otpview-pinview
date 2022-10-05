@@ -1,5 +1,6 @@
 package com.mukesh
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,11 +24,13 @@ import androidx.compose.ui.unit.sp
 const val OTP_VIEW_TYPE_NONE = 0
 const val OTP_VIEW_TYPE_UNDERLINE = 1
 const val OTP_VIEW_TYPE_BORDER = 2
+const val TAG = "OtpView"
 
 @Composable
 fun OtpView(
     modifier: Modifier = Modifier,
-    otpText: String = "",
+//    otpTextState: OtpViewFieldState = rememberOtpViewFieldState(),
+    otpTextViewModel: OtpTextViewModel,
     charColor: Color = Color.Black,
     charBackground: Color = Color.Transparent,
     charSize: TextUnit = 16.sp,
@@ -35,15 +40,18 @@ fun OtpView(
     enabled: Boolean = true,
     password: Boolean = false,
     passwordChar: String = "",
-    keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-    onOtpTextChange: (String) -> Unit
+    keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
 ) {
+    val otpData by otpTextViewModel.currentOtpText.observeAsState(initial = "")
+    Log.d(TAG, "otp data: $otpData")
+
     BasicTextField(
         modifier = modifier,
-        value = otpText,
+        value = otpData,
         onValueChange = {
             if (it.length <= otpCount) {
-                onOtpTextChange.invoke(it)
+//                onOtpTextChange.invoke(it)
+                otpTextViewModel.currentOtpText.value = it
             }
         },
         enabled = enabled,
@@ -54,21 +62,21 @@ fun OtpView(
                     Spacer(modifier = Modifier.width(2.dp))
                     CharView(
                         index = index,
-                        text = otpText,
+                        text = otpData,
                         charColor = charColor,
                         charSize = charSize,
                         containerSize = containerSize,
                         type = type,
                         charBackground = charBackground,
                         password = password,
-                        passwordChar = passwordChar,
+                        passwordChar = passwordChar
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                 }
             }
-        })
+        }
+    )
 }
-
 
 @Composable
 private fun CharView(
@@ -98,7 +106,7 @@ private fun CharView(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
     ) {
         val char = when {
             index >= text.length -> ""
@@ -111,7 +119,7 @@ private fun CharView(
             modifier = modifier.wrapContentHeight(),
             style = MaterialTheme.typography.body1,
             fontSize = charSize,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Center
         )
         if (type == OTP_VIEW_TYPE_UNDERLINE) {
             Spacer(modifier = Modifier.height(2.dp))
